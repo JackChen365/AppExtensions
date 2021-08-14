@@ -1,0 +1,39 @@
+import java.util.jar.JarFile
+//Add a folder to classpath, and we will put all the plugin into the folder.
+rootProject.buildscript.dependencies {
+    classpath fileTree(dir: "${rootProject.projectDir.absolutePath}/.extensions/plugin_libs", include: '*.jar')
+}
+rootProject.allprojects.each { project->
+    project.plugins.withId("com.android.application") {
+        println "Found android app ${project.name}"
+//        project.android.sourceSets.main.java.srcDir "../${project.name}-extension/src/main/java"
+//        project.android.sourceSets.main.resources.srcDir "../${project.name}-extension/src/main/resources"
+        fileTree(dir: "${rootProject.projectDir.absolutePath}/.extensions/plugin_libs", include: "*.jar").each { file ->
+            //Can not use zipTree directly, maybe because we put the code in init.gradle.
+            def jarFile = null
+            try {
+                jarFile = new JarFile(file)
+                Enumeration enumEntries = jarFile.entries()
+                while (enumEntries.hasMoreElements()) {
+                    def jarEntry = enumEntries.nextElement()
+                    if (jarEntry.name.endsWith("properties")) {
+                        Properties props = new Properties()
+                        props.load(jarFile.getInputStream(jarEntry))
+                        if (props != null && props.containsKey('implementation-class')) {
+                            //This is a plugin config file. The name without suffix is the plugin id.
+                            project.afterEvaluate {
+                                String fileName = jarEntry.name.substring(jarEntry.name.lastIndexOf("/") + 1)
+                                String pluginId = fileName.replace(".properties", "")
+                                //Apply the plugin for this project.
+                                println("apply plugin:$pluginId from plugin libs.")
+                                project.plugins.apply(pluginId)
+                            }
+                        }
+                    }
+                }
+            } finally {
+                jarFile?.close()
+            }
+        }
+    }
+}

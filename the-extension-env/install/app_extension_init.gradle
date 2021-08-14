@@ -1,0 +1,13 @@
+allprojects { project->
+    if(project == project.rootProject){
+        def file = new File(project.rootProject.projectDir,".extensions/scripts")
+        println "start apply the script file from:${file.absolutePath}."
+        if(file.exists()){
+            file.listFiles().each { scriptFile->
+                println "\t|--- apply file:${scriptFile.name}"
+                apply from: "${scriptFile.absolutePath}"
+            }
+        }
+    }
+}
+

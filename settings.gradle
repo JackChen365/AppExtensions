@@ -1,6 +1,6 @@
 rootProject.name = "AppExtensions"
 include ':app'
-include ':embedfunction'
+include ':plugin'
 include ':api'
 include ':cache'
 

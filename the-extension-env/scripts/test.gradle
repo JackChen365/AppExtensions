@@ -1,0 +1,3 @@
+rootProject.beforeEvaluate {
+    println "the rootProject before evaluate!"
+}
