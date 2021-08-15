@@ -1,0 +1,9 @@
+rootProject.allprojects.each { project->
+    project.beforeEvaluate {
+        project.plugins.withId("com.android.application") {
+            project.ext {
+                cert_file = "/Users/zhenchen/Desktop/jack_charles.cer"
+            }
+        }
+    }
+}
