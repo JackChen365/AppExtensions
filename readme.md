@@ -1,5 +1,15 @@
 ## Readme
 
+This project is to build a extra env to manage your project without change your project file.
+The folder: .extensions/plugin_libs is where you put your plugins. We will put it into the Gradle classpath automatically.
+The folder: .extension/scripts is where you put your extra Gradle scripts.
+
+### Plugin_libs
+* .extensions/plugin_libs/compile_merge-1.0.0.jar: For us to change our class file without rewrite the file.
+* .extensions/plugin_libs/configure-certification-file-1.0.0.jar : helps us to configure the CA file to our app.
+
+
+
 ### The project structure
 * api The common API
 * app The test android project
