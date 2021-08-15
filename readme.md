@@ -47,7 +47,7 @@ Another problem, Since we put our extensions into the global gitignore file. We 
 
 ### How to start
 * Copy the app_extension to your project.
-* Execute the script: app_extension/script/app_extension_install.sh
+* Execute the script: .extensions/script/app_extension_install.sh
 
 That's it.
 
