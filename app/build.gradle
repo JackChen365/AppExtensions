@@ -33,9 +33,13 @@ android {
         abortOnError false
     }
 }
-
+println "------------------------------"
+android.sourceSets.each { sourceSet ->
+    println sourceSet.java.srcDirs
+}
 
 dependencies {
+    implementation fileTree(dir: "libs", include: '*.jar')
     implementation deps.kotlin.stdlib
     implementation deps.core_ktx
     implementation deps.app_compat

@@ -32,7 +32,7 @@ class MergeClassesSpec extends Specification {
 
         def classReader = new ClassReader(IOUtils.toByteArray(new FileInputStream(targetFile)))
         def classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
-        def classVisitor = new MergeClassVisitor(classWriter,cn)
+        def classVisitor = new RemapperClassVisitor(classWriter,cn)
         classReader.accept(classVisitor, ClassReader.EXPAND_FRAMES)
 
         File newFile = new File(targetFile.parentFile,"MergeClass.class")
@@ -43,11 +43,11 @@ class MergeClassesSpec extends Specification {
         noExceptionThrown()
     }
 
-    class MergeClassVisitor extends ClassVisitor {
+    class RemapperClassVisitor extends ClassVisitor {
         private ClassNode cn;
         private String cname;
-        public MergeClassVisitor(ClassVisitor cv,
-                                 ClassNode cn) {
+        public RemapperClassVisitor(ClassVisitor cv,
+                                    ClassNode cn) {
             super(Opcodes.ASM5,cv);
             this.cn = cn;
         }

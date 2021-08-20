@@ -3,9 +3,6 @@ package cache.test;
 import java.util.Deque;
 import java.util.LinkedList;
 
-/**
- * Check the test case in the test package.
- */
 public class LRUCache<E> {
     private Deque<E> deque;
   

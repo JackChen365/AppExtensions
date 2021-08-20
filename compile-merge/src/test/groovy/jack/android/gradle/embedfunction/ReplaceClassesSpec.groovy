@@ -72,7 +72,7 @@ class ReplaceClassesSpec extends Specification {
         def targetFile = decorateClassModel.targetFile
         def targetClassReader = new ClassReader(IOUtils.toByteArray(new FileInputStream(targetFile)))
         def classWriter = new ClassWriter(targetClassReader, ClassWriter.COMPUTE_FRAMES)
-        def classVisitor = new MergeClassVisitor(classWriter,classNode,decorateClassModel)
+        def classVisitor = new RemapperClassVisitor(classWriter,classNode,decorateClassModel)
         targetClassReader.accept(classVisitor, ClassReader.EXPAND_FRAMES)
 
         File newFile = new File(targetFile.parentFile,"New"+targetFile.name)
@@ -147,13 +147,13 @@ class ReplaceClassesSpec extends Specification {
         }
     }
 
-    class MergeClassVisitor extends ClassVisitor {
+    class RemapperClassVisitor extends ClassVisitor {
         private DecorateClassModel decorateClassModel;
         private ClassNode classNode;
         private String className;
-        public MergeClassVisitor(ClassVisitor cv,
-                                 ClassNode classNode,
-                                 DecorateClassModel decorateClassModel) {
+        public RemapperClassVisitor(ClassVisitor cv,
+                                    ClassNode classNode,
+                                    DecorateClassModel decorateClassModel) {
             super(Opcodes.ASM5,cv);
             this.classNode = classNode;
             this.decorateClassModel = decorateClassModel

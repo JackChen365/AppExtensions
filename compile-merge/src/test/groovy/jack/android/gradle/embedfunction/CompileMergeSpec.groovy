@@ -21,7 +21,7 @@ class CompileMergeSpec extends Specification{
         expect:
         def result = GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
-                .withArguments(':app:assembleRelease')
+                .withArguments(':app:assembleDebug')
                 .withDebug(true)
                 .forwardOutput()
                 .withPluginClasspath()

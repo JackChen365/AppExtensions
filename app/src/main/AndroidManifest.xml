@@ -9,7 +9,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.EmbedFunction">
-        <activity android:name="jack.android.embedfunction.MainActivity_Decorated">
+        <activity android:name="jack.android.embedfunction.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

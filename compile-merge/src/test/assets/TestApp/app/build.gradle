@@ -31,6 +31,10 @@ android {
         main.java.srcDirs += '../app-tmp/src/main/java'
         main.resources.srcDirs += '../app-tmp/src/main/res'
     }
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
 
 

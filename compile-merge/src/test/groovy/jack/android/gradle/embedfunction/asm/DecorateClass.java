@@ -1,6 +1,6 @@
 package jack.android.gradle.embedfunction.asm;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.android.annotations.NonNull;
 import jack.android.embedfunction.api.Decorate;
 
 /**
@@ -11,8 +11,9 @@ import jack.android.embedfunction.api.Decorate;
  */
 @Decorate(target = TargetClass.class)
 public class DecorateClass {
-    @VisibleForTesting
+    @NonNull
     private InternalClass internalClass;
+    private CallListener listener;
 
     public DecorateClass(){
         internalClass = new InternalClass();
@@ -31,5 +32,31 @@ public class DecorateClass {
         System.out.println("printMessage2 from TargetClass");
         final InternalClass internalClass = new InternalClass();
         internalClass.testFunction();
+        setCallListener(new CallListener() {
+            private boolean isInitial=false;
+            @Override public void onCall(final String message) {
+                if(!isInitial){
+                    isInitial = true;
+                    System.out.println(message);
+                }
+            }
+        });
+        this.listener.onCall("call from inner class.");
+        InnerStaticClass staticClass = new InnerStaticClass();
+        staticClass.printMessage();
+    }
+
+    public void setCallListener(CallListener listener){
+        this.listener = listener;
+    }
+
+    interface CallListener{
+        void onCall(String message);
+    }
+
+    private static class InnerStaticClass{
+        void printMessage(){
+            System.out.println("Print message from inner static class.");
+        }
     }
 }

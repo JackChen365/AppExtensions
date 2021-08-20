@@ -14,12 +14,12 @@ import java.util.function.Consumer
 class EmbedFunctionPlugin: Plugin<Project> {
     override fun apply(project: Project) {
         if(!isAndroidProject(project)) return
+        println("Apply EmbedFunctionPlugin~")
         val tempSourceFolder = File(project.rootDir,project.name+"-extension")
         if(!tempSourceFolder.exists()){
             tempSourceFolder.mkdir()
         }
         configureTempSourceFolder(project,tempSourceFolder)
-
         val appExtension = project.extensions.findByType(AppExtension::class.java)
         appExtension?.registerTransform(EmbedFunctionTransform(project))
     }
@@ -35,12 +35,14 @@ class EmbedFunctionPlugin: Plugin<Project> {
             resSourceFolder.mkdirs()
         }
         appExtension.sourceSets.forEach(Consumer { sourceSet: AndroidSourceSet ->
-            sourceSet.java.srcDirs(javaSourceFolder.absolutePath)
-            sourceSet.res.srcDirs(resSourceFolder.absoluteFile)
+            if(sourceSet.name == "main"){
+                sourceSet.java.srcDir(javaSourceFolder.absolutePath)
+                sourceSet.res.srcDir(resSourceFolder.absoluteFile)
+            }
         })
     }
 
     private inline fun isAndroidProject(project: Project):Boolean {
-        return project.plugins.hasPlugin(AppPlugin::class.java)||project.plugins.hasPlugin(LibraryPlugin::class.java)
+        return project.plugins.hasPlugin(AppPlugin::class.java)
     }
 }
