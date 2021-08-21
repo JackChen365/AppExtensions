@@ -14,7 +14,6 @@ import java.util.function.Consumer
 class EmbedFunctionPlugin: Plugin<Project> {
     override fun apply(project: Project) {
         if(!isAndroidProject(project)) return
-        println("Apply EmbedFunctionPlugin~")
         val tempSourceFolder = File(project.rootDir,project.name+"-extension")
         if(!tempSourceFolder.exists()){
             tempSourceFolder.mkdir()

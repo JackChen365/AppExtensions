@@ -2,25 +2,23 @@ package jack.android.embedfunction
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import cache.test.LRUCache
+import android.widget.TextView
+import jack.android.embedfunction.R
+import android.widget.Toast
 
+/**
+ * Created on 2021/8/18.
+ *
+ * @author Jack Chen
+ * @email zhenchen@tubi.tv
+ */
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val cache = LRUCache<Int>(4)
-        cache.push(1)
-        cache.push(2)
-        cache.push(3)
-        cache.push(1)
-        cache.push(4)
-        cache.push(5)
-        cache.push(2)
-        cache.push(2)
-        cache.push(1)
-        println(1 == cache.pop())
-        println(2 == cache.pop())
-        println(5 == cache.pop())
-        println(4 == cache.pop())
+        val view = findViewById<TextView>(R.id.text_view)
+        view.setOnClickListener {
+            Toast.makeText(applicationContext, "Click from MainActivity", Toast.LENGTH_SHORT).show()
+        }
     }
 }

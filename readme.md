@@ -114,3 +114,4 @@ class MainActivity_Decorated : AppCompatActivity() {
 
 ## References
 *[asm-transformations](https://lsieun.cn/assets/pdf/asm-transformations.pdf)
+*[exploring-kotlin-lambda-bytecode](https://medium.com/@christian.c.carroll/exploring-kotlin-lambda-bytecode-8c2d15afd490)

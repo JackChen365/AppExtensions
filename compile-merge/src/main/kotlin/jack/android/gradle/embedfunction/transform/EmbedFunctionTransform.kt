@@ -10,12 +10,14 @@ import org.apache.commons.io.FileUtils
 import org.gradle.api.Project
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.commons.ClassRemapper
 import org.objectweb.asm.commons.SimpleRemapper
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.io.UncheckedIOException
+import java.lang.NullPointerException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
@@ -53,7 +55,7 @@ open class EmbedFunctionTransform(private val project: Project) : Transform() {
         transformInvocation.outputProvider.deleteAll()
         val decorateClassList = collectTheDecorateClasses(transformInvocation)
         decorateClassList.forEach { decorateClassModel ->
-            println(decorateClassModel.targetClassName+"->"+decorateClassModel.decorateClassName)
+            println("\t"+decorateClassModel.targetClassName+"->"+decorateClassModel.decorateClassName)
         }
         transformJarFiles(transformInvocation, decorateClassList)
         transformClassFiles(transformInvocation, decorateClassList)
@@ -146,15 +148,16 @@ open class EmbedFunctionTransform(private val project: Project) : Transform() {
                                 if(classFile.name.contains('$')){
                                     //Inner class
                                     //We will delete the target inner class, then change the decorate inner class to replace the target inner class.
-                                    val outerClassName = classFile.name.substringBeforeLast("$")
+                                    val outerClassName = classFile.name.substringBefore("$")
                                     val outerFile = File(classFile.parentFile, "$outerClassName.class")
                                     val decorateClassModel = findDecorateClassModel(decorateClassList, outerFile.absolutePath)
                                     if (null != decorateClassModel) {
-                                        println("Process the inner class file:${classFile.name}")
+                                        println("\tProcess the inner class file:${classFile.name}")
                                         val classBytes = processInnerClassBytes(classFile,decorateClassModel)
                                         val targetSimpleClassName =
                                             decorateClassModel.targetClassName?.substringAfterLast(".")
-                                        val innerClassName = classFile.name.substringAfterLast("$")
+                                        val innerClassName = classFile.name.substringAfter("$")
+                                        println("\t$targetSimpleClassName$$innerClassName")
                                         File(classFile.parentFile, "$targetSimpleClassName$$innerClassName").writeBytes(classBytes)
                                         classFile.delete()
                                     }
@@ -163,7 +166,7 @@ open class EmbedFunctionTransform(private val project: Project) : Transform() {
                                     val targetClassModel = findTargetClassModel(decorateClassList, classFile.absolutePath)
                                     if (null != targetClassModel) {
                                         needDeleteClassList.add(targetClassModel.sourceFile)
-                                        println("Process the source file:${classFile.absolutePath}")
+                                        println("\tProcess the source file:${classFile.absolutePath}")
                                         val classBytes = processClassBytes(targetClassModel)
                                         classFile.writeBytes(classBytes)
                                     }
@@ -175,16 +178,16 @@ open class EmbedFunctionTransform(private val project: Project) : Transform() {
                     }
                 }
                 try {
+                    //Delete the class file before transform.
+                    needDeleteClassList.forEach { file->
+                        file?.delete()
+                    }
                     val destFolder = outputProvider.getContentLocation(
                         dir.name,
                         dir.contentTypes,
                         dir.scopes,
                         Format.DIRECTORY
                     )
-                    //Delete the class file before transform.
-                    needDeleteClassList.forEach { file->
-                        file?.delete()
-                    }
                     FileUtils.copyDirectory(dir.file, destFolder)
                 } catch (e: IOException) {
                     throw UncheckedIOException(e)
@@ -230,9 +233,7 @@ open class EmbedFunctionTransform(private val project: Project) : Transform() {
             var byteArray = inputStream.readBytes()
             val targetClassModel = findTargetClassModel(decorateClassList, entryName)
             if (null != targetClassModel) {
-                println("Process the file in Jar:$entryName")
                 byteArray = processClassBytes(targetClassModel)
-                //targetClassModel.sourceFile?.delete()
             }
             jarOutputStream.write(byteArray)
             jarOutputStream.closeEntry()
@@ -283,7 +284,20 @@ open class EmbedFunctionTransform(private val project: Project) : Transform() {
         val classReader = ClassReader(sourceFile?.readBytes())
         val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
         val simpleRemapper = SimpleRemapper(remapperMap)
-        val classRemapper = ClassRemapper(classWriter, simpleRemapper)
+        val classRemapper = object :ClassRemapper(classWriter, simpleRemapper){
+            override fun visitMethod(
+                access: Int,
+                name: String?,
+                descriptor: String?,
+                signature: String?,
+                exceptions: Array<out String>?
+            ): MethodVisitor {
+                if(true == name?.contains("\$lambda")){
+                    println("method:$name")
+                }
+                return super.visitMethod(access, name, descriptor, signature, exceptions)
+            }
+        }
         classReader.accept(classRemapper, ClassReader.EXPAND_FRAMES)
         val file = File(project.buildDir, "file-tmp")
         if (!file.exists()) {

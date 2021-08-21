@@ -45,7 +45,6 @@ dependencies {
     implementation deps.app_compat
     implementation deps.constraint_layout
     implementation deps.material
-    implementation project(path: ':api')
 
     testImplementation deps.atsl.ext_junit
     androidTestImplementation deps.atsl.ext_junit
