@@ -1,11 +1,11 @@
-package jack.android.gradle.embedfunction.transform
+package jack.android.gradle.merge.transform
 
 import com.android.build.api.transform.*
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.google.common.collect.ImmutableSet
-import jack.android.gradle.embedfunction.model.DecorateClassModel
-import jack.android.gradle.embedfunction.visitor.DecoratedClassVisitor
+import jack.android.gradle.merge.model.DecorateClassModel
+import jack.android.gradle.merge.visitor.DecoratedClassVisitor
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Project
 import org.objectweb.asm.ClassReader
@@ -28,7 +28,7 @@ import java.util.jar.JarOutputStream
 import java.util.zip.ZipEntry
 import kotlin.collections.HashSet
 
-open class EmbedFunctionTransform(private val project: Project) : Transform() {
+open class MergeClassTransform(private val project: Project) : Transform() {
 
     override fun getName(): String {
         return "EmbedFunction"
@@ -196,7 +196,7 @@ open class EmbedFunctionTransform(private val project: Project) : Transform() {
         }
     }
 
-    private inline fun findTargetClassModel(decorateClassList: List<DecorateClassModel>,classPath: String): DecorateClassModel?{
+    private inline fun findTargetClassModel(decorateClassList: List<DecorateClassModel>, classPath: String): DecorateClassModel?{
         return decorateClassList.find {
             val targetRelativeClassPath = it.targetRelativeClassPath
             if (null != targetRelativeClassPath)
@@ -206,7 +206,7 @@ open class EmbedFunctionTransform(private val project: Project) : Transform() {
         }
     }
 
-    private inline fun findDecorateClassModel(decorateClassList: List<DecorateClassModel>,classPath: String): DecorateClassModel?{
+    private inline fun findDecorateClassModel(decorateClassList: List<DecorateClassModel>, classPath: String): DecorateClassModel?{
         return decorateClassList.find {
             val targetRelativeClassPath = it.decorateRelativeClassPath
             if (null != targetRelativeClassPath)

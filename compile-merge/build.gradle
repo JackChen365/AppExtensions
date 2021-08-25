@@ -21,8 +21,8 @@ compileTestKotlin {
 gradlePlugin {
     plugins {
         simplePlugin {
-            id = 'embed-function'
-            implementationClass = 'jack.android.gradle.embedfunction.EmbedFunctionPlugin'
+            id = 'compile-merge'
+            implementationClass = 'jack.android.gradle.merge.MergeClassPlugin'
         }
     }
 }

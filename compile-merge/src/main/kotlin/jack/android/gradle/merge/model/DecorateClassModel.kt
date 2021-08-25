@@ -1,4 +1,4 @@
-package jack.android.gradle.embedfunction.model;
+package jack.android.gradle.merge.model;
 
 import java.io.File
 

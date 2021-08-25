@@ -1,17 +1,16 @@
-package jack.android.gradle.embedfunction
+package jack.android.gradle.merge
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.AppPlugin
-import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidSourceSet
-import jack.android.gradle.embedfunction.transform.EmbedFunctionTransform
+import jack.android.gradle.merge.transform.MergeClassTransform
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
 import java.util.function.Consumer
 
 
-class EmbedFunctionPlugin: Plugin<Project> {
+class MergeClassPlugin: Plugin<Project> {
     override fun apply(project: Project) {
         if(!isAndroidProject(project)) return
         val tempSourceFolder = File(project.rootDir,project.name+"-extension")
@@ -20,7 +19,7 @@ class EmbedFunctionPlugin: Plugin<Project> {
         }
         configureTempSourceFolder(project,tempSourceFolder)
         val appExtension = project.extensions.findByType(AppExtension::class.java)
-        appExtension?.registerTransform(EmbedFunctionTransform(project))
+        appExtension?.registerTransform(MergeClassTransform(project))
     }
 
     private fun configureTempSourceFolder(project: Project, tempSourceFile: File) {

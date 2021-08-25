@@ -1,6 +1,6 @@
-package jack.android.gradle.embedfunction.visitor;
+package jack.android.gradle.merge.visitor;
 
-import jack.android.gradle.embedfunction.model.DecorateClassModel
+import jack.android.gradle.merge.model.DecorateClassModel
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.Opcodes
