@@ -1,5 +1,6 @@
 package jack.android.embedfunction
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.TextView
@@ -13,6 +14,12 @@ import android.widget.Toast
  * @email zhenchen@tubi.tv
  */
 class MainActivity : AppCompatActivity() {
+    companion object{
+        private const val TAG="MainActivity"
+        private fun test(context:Context){
+            Toast.makeText(context,"Message from MainActivity",Toast.LENGTH_LONG).show()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

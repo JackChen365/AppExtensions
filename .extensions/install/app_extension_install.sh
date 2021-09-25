@@ -5,7 +5,7 @@ git reset app_extension_install.sh
 git reset app_extension_init.gradle
 
 # Add the app_extension to global ignore file.
-global_git_ignore="*_extension/
+global_git_ignore="app-extension/
 .extensions
 "
 rm ~/.global_git_ignore.txt

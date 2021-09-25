@@ -17,7 +17,7 @@ class CompileMergeSpec extends Specification{
         tmpLocalProperties.append("sdk.dir="+getAndroidSdkDir())
 
         def appBuildScript = new File(testProjectDir.root,"app/build.gradle")
-        appBuildScript.text = appBuildScript.text.replace("//id 'plugin-placeholder'","id 'embed-function'")
+        appBuildScript.text = appBuildScript.text.replace("//id 'plugin-placeholder'","id 'compile-merge'")
         expect:
         def result = GradleRunner.create()
                 .withProjectDir(testProjectDir.root)

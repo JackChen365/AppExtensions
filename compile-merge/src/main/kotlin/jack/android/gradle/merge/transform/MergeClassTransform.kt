@@ -48,17 +48,19 @@ open class MergeClassTransform(private val project: Project) : Transform() {
 
     override fun transform(transformInvocation: TransformInvocation) {
         super.transform(transformInvocation)
-        println("Start transform the class files.")
         if (transformInvocation.isIncremental) {
             throw UnsupportedOperationException("Unsupported incremental build!")
         }
         transformInvocation.outputProvider.deleteAll()
         val decorateClassList = collectTheDecorateClasses(transformInvocation)
         decorateClassList.forEach { decorateClassModel ->
-            println("\t"+decorateClassModel.targetClassName+"->"+decorateClassModel.decorateClassName)
+            println("\t" + decorateClassModel.targetClassName + "->" + decorateClassModel.decorateClassName)
         }
-        transformJarFiles(transformInvocation, decorateClassList)
-        transformClassFiles(transformInvocation, decorateClassList)
+        val processInnerClassList = mutableListOf<String>()
+        println("Start transform the class files.")
+        transformClassFiles(transformInvocation, decorateClassList, processInnerClassList)
+        println("Start transform the jar files.")
+        transformJarFiles(transformInvocation, decorateClassList, processInnerClassList)
     }
 
     private fun collectTheDecorateClasses(transformInvocation: TransformInvocation): List<DecorateClassModel> {
@@ -101,7 +103,8 @@ open class MergeClassTransform(private val project: Project) : Transform() {
 
     private fun transformJarFiles(
         transformInvocation: TransformInvocation,
-        decorateClassList: List<DecorateClassModel>
+        decorateClassList: List<DecorateClassModel>,
+        processInnerClassList: MutableList<String>
     ) {
         val outputProvider = transformInvocation.outputProvider
         //Copy all the jar and classes to the where they need to...
@@ -120,7 +123,12 @@ open class MergeClassTransform(private val project: Project) : Transform() {
                     )
                 }
                 try {
-                    processAndTransformJar(decorateClassList, jarInput.file, dest)
+                    processAndTransformJar(
+                        decorateClassList,
+                        processInnerClassList,
+                        jarInput.file,
+                        dest
+                    )
                 } catch (e: IOException) {
                     throw UncheckedIOException(e)
                 }
@@ -130,7 +138,8 @@ open class MergeClassTransform(private val project: Project) : Transform() {
 
     private fun transformClassFiles(
         transformInvocation: TransformInvocation,
-        decorateClassList: List<DecorateClassModel>
+        decorateClassList: List<DecorateClassModel>,
+        processInnerClassList: MutableList<String>
     ) {
         val outputProvider = transformInvocation.outputProvider
         for (input in transformInvocation.inputs) {
@@ -145,25 +154,36 @@ open class MergeClassTransform(private val project: Project) : Transform() {
                             "BuildConfig.class" != fileName
                         ) {
                             try {
-                                if(classFile.name.contains('$')){
+                                if (classFile.name.contains('$')) {
                                     //Inner class
                                     //We will delete the target inner class, then change the decorate inner class to replace the target inner class.
                                     val outerClassName = classFile.name.substringBefore("$")
-                                    val outerFile = File(classFile.parentFile, "$outerClassName.class")
-                                    val decorateClassModel = findDecorateClassModel(decorateClassList, outerFile.absolutePath)
+                                    val outerFile =
+                                        File(classFile.parentFile, "$outerClassName.class")
+                                    val decorateClassModel = findDecorateClassModel(
+                                        decorateClassList,
+                                        outerFile.absolutePath
+                                    )
                                     if (null != decorateClassModel) {
-                                        println("\tProcess the inner class file:${classFile.name}")
-                                        val classBytes = processInnerClassBytes(classFile,decorateClassModel)
+                                        val classBytes =
+                                            processInnerClassBytes(classFile, decorateClassModel)
                                         val targetSimpleClassName =
                                             decorateClassModel.targetClassName?.substringAfterLast(".")
                                         val innerClassName = classFile.name.substringAfter("$")
-                                        println("\t$targetSimpleClassName$$innerClassName")
-                                        File(classFile.parentFile, "$targetSimpleClassName$$innerClassName").writeBytes(classBytes)
+                                        println("\tProcess the inner class file:${classFile.name} -> $targetSimpleClassName\$$innerClassName")
+                                        File(
+                                            classFile.parentFile,
+                                            "$targetSimpleClassName$$innerClassName"
+                                        ).writeBytes(classBytes)
+                                        processInnerClassList.add("$targetSimpleClassName$$innerClassName")
                                         classFile.delete()
                                     }
                                 } else {
                                     //Find the target class. Since we could use sourceFile to change the decorated class.
-                                    val targetClassModel = findTargetClassModel(decorateClassList, classFile.absolutePath)
+                                    val targetClassModel = findTargetClassModel(
+                                        decorateClassList,
+                                        classFile.absolutePath
+                                    )
                                     if (null != targetClassModel) {
                                         needDeleteClassList.add(targetClassModel.sourceFile)
                                         println("\tProcess the source file:${classFile.absolutePath}")
@@ -179,7 +199,7 @@ open class MergeClassTransform(private val project: Project) : Transform() {
                 }
                 try {
                     //Delete the class file before transform.
-                    needDeleteClassList.forEach { file->
+                    needDeleteClassList.forEach { file ->
                         file?.delete()
                     }
                     val destFolder = outputProvider.getContentLocation(
@@ -196,7 +216,10 @@ open class MergeClassTransform(private val project: Project) : Transform() {
         }
     }
 
-    private inline fun findTargetClassModel(decorateClassList: List<DecorateClassModel>, classPath: String): DecorateClassModel?{
+    private inline fun findTargetClassModel(
+        decorateClassList: List<DecorateClassModel>,
+        classPath: String
+    ): DecorateClassModel? {
         return decorateClassList.find {
             val targetRelativeClassPath = it.targetRelativeClassPath
             if (null != targetRelativeClassPath)
@@ -206,7 +229,10 @@ open class MergeClassTransform(private val project: Project) : Transform() {
         }
     }
 
-    private inline fun findDecorateClassModel(decorateClassList: List<DecorateClassModel>, classPath: String): DecorateClassModel?{
+    private inline fun findDecorateClassModel(
+        decorateClassList: List<DecorateClassModel>,
+        classPath: String
+    ): DecorateClassModel? {
         return decorateClassList.find {
             val targetRelativeClassPath = it.decorateRelativeClassPath
             if (null != targetRelativeClassPath)
@@ -217,7 +243,12 @@ open class MergeClassTransform(private val project: Project) : Transform() {
     }
 
     @Throws(IOException::class)
-    private fun processAndTransformJar(decorateClassList: List<DecorateClassModel>, sourceFile: File, destFile: File) {
+    private fun processAndTransformJar(
+        decorateClassList: List<DecorateClassModel>,
+        processInnerClassList: MutableList<String>,
+        sourceFile: File,
+        destFile: File
+    ) {
         if (null == sourceFile || !sourceFile.exists()) return
         val jarFile = JarFile(sourceFile)
         val newDestFile = File(destFile.parent, destFile.name.hashCode().toString() + destFile.name)
@@ -228,15 +259,19 @@ open class MergeClassTransform(private val project: Project) : Transform() {
             val jarEntry = enumeration.nextElement() as JarEntry
             val inputStream = jarFile.getInputStream(jarEntry)
             val entryName = jarEntry.getName()
-            jarOutputStream.putNextEntry(ZipEntry(entryName))
-
-            var byteArray = inputStream.readBytes()
-            val targetClassModel = findTargetClassModel(decorateClassList, entryName)
-            if (null != targetClassModel) {
-                byteArray = processClassBytes(targetClassModel)
+            val baseName = entryName.substringAfterLast("/")
+            if (processInnerClassList.any { it == baseName }) {
+                println("\tJar:${sourceFile.name} filter the entry: $entryName.")
+            } else {
+                jarOutputStream.putNextEntry(ZipEntry(entryName))
+                var byteArray = inputStream.readBytes()
+                val targetClassModel = findTargetClassModel(decorateClassList, entryName)
+                if (null != targetClassModel) {
+                    byteArray = processClassBytes(targetClassModel)
+                }
+                jarOutputStream.write(byteArray)
+                jarOutputStream.closeEntry()
             }
-            jarOutputStream.write(byteArray)
-            jarOutputStream.closeEntry()
         }
         jarOutputStream.close()
         jarFile.close()
@@ -245,7 +280,10 @@ open class MergeClassTransform(private val project: Project) : Transform() {
         newDestFile.renameTo(destFile)
     }
 
-    private fun processInnerClassBytes(innerFile: File, decorateClassModel: DecorateClassModel): ByteArray {
+    private fun processInnerClassBytes(
+        innerFile: File,
+        decorateClassModel: DecorateClassModel
+    ): ByteArray {
         val decorateClassName = decorateClassModel.decorateClassName?.replace('.', '/')
         val targetClassName = decorateClassModel.targetClassName?.replace('.', '/')
         val classSet = collectClasses(decorateClassModel.sourceFile)
@@ -284,7 +322,7 @@ open class MergeClassTransform(private val project: Project) : Transform() {
         val classReader = ClassReader(sourceFile?.readBytes())
         val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
         val simpleRemapper = SimpleRemapper(remapperMap)
-        val classRemapper = object :ClassRemapper(classWriter, simpleRemapper){
+        val classRemapper = object : ClassRemapper(classWriter, simpleRemapper) {
             override fun visitMethod(
                 access: Int,
                 name: String?,
@@ -292,7 +330,7 @@ open class MergeClassTransform(private val project: Project) : Transform() {
                 signature: String?,
                 exceptions: Array<out String>?
             ): MethodVisitor {
-                if(true == name?.contains("\$lambda")){
+                if (true == name?.contains("\$lambda")) {
                     println("method:$name")
                 }
                 return super.visitMethod(access, name, descriptor, signature, exceptions)

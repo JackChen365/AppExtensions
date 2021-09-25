@@ -33,10 +33,6 @@ android {
         abortOnError false
     }
 }
-println "------------------------------"
-android.sourceSets.each { sourceSet ->
-    println sourceSet.java.srcDirs
-}
 
 dependencies {
     implementation fileTree(dir: "libs", include: '*.jar')
@@ -45,6 +41,8 @@ dependencies {
     implementation deps.app_compat
     implementation deps.constraint_layout
     implementation deps.material
+
+    implementation project(path: ':library')
 
     testImplementation deps.atsl.ext_junit
     androidTestImplementation deps.atsl.ext_junit

@@ -2,5 +2,4 @@ rootProject.name = "AppExtensions"
 include ':app'
 include ':compile-merge'
 include ':api'
-include ':cache'
-
+include ':library'

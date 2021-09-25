@@ -10,9 +10,4 @@ repositories {
 }
 
 dependencies {
-    implementation project(path: ':api')
-}
-
-test {
-    useJUnitPlatform()
 }
